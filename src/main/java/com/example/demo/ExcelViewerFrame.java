@@ -10,17 +10,49 @@ import java.util.Vector;
 
 public class ExcelViewerFrame extends JFrame {
 
-    private JTable table;
+    private JTable excelTable;
+    private JTable electionTable;
 
     public ExcelViewerFrame() {
         setTitle("Excel Viewer");
-        setSize(800, 600);
+        setSize(1200, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Initialize empty table
-        table = new JTable();
-        JScrollPane scrollPane = new JScrollPane(table);
-        add(scrollPane, BorderLayout.CENTER);
+        // Initialize empty Excel table
+        excelTable = new JTable();
+
+        // Initialize second table with fixed headers
+        String[] electionHeaders = {"Election", "Assembly", "Party", "Name", "Votes"};
+        DefaultTableModel electionModel = new DefaultTableModel(electionHeaders, 0);
+        electionTable = new JTable(electionModel);
+
+        // Create scroll panes
+        JScrollPane excelScrollPane = new JScrollPane(excelTable);
+        JScrollPane electionScrollPane = new JScrollPane(electionTable);
+
+        // Add both tables side by side using JSplitPane
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, excelScrollPane, electionScrollPane);
+        splitPane.setDividerLocation(600);
+        add(splitPane, BorderLayout.CENTER);
+
+        // Bottom button panel
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        JButton removeColumnBtn = new JButton("Remove Column");
+        JButton removeRowBtn = new JButton("Remove Row");
+        JButton addPartyBtn = new JButton("Add Party");
+        JButton reverseCellBtn = new JButton("Reverse Cell");
+        JButton addElectionBtn = new JButton("Add Election");
+        JButton addConstituencyBtn = new JButton("Add Constituency");
+
+        // Add buttons to panel
+        bottomPanel.add(removeColumnBtn);
+        bottomPanel.add(removeRowBtn);
+        bottomPanel.add(addPartyBtn);
+        bottomPanel.add(reverseCellBtn);
+        bottomPanel.add(addElectionBtn);
+        bottomPanel.add(addConstituencyBtn);
+
+        add(bottomPanel, BorderLayout.SOUTH);
 
         // Menu Bar
         JMenuBar menuBar = new JMenuBar();
@@ -60,7 +92,7 @@ public class ExcelViewerFrame extends JFrame {
             columnNames.add(cell.toString());
         }
 
-        // Extract data rows (start from row 1 to skip header row)
+        // Extract data rows
         Vector<Vector<Object>> data = new Vector<>();
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
@@ -85,8 +117,8 @@ public class ExcelViewerFrame extends JFrame {
         workbook.close();
         fis.close();
 
-        // Create a model where only the first column is editable and rendered as checkbox
-        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+        // Create a model for the Excel table with checkbox in first column
+        DefaultTableModel excelModel = new DefaultTableModel(data, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return column == 0; // Only checkbox column editable
@@ -95,13 +127,12 @@ public class ExcelViewerFrame extends JFrame {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 if (columnIndex == 0) {
-                    return Boolean.class; // Render as checkbox
+                    return Boolean.class;
                 }
                 return super.getColumnClass(columnIndex);
             }
         };
 
-        // Set the model to the existing table
-        table.setModel(model);
+        excelTable.setModel(excelModel);
     }
 }
